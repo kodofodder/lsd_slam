@@ -21,21 +21,23 @@ find_package(catkin REQUIRED COMPONENTS
   rosbag
   message_generation
   roslib
-)
+  )
+
 
 find_package(OpenGL REQUIRED)
 set(QT_USE_QTOPENGL TRUE)
 set(QT_USE_QTXML TRUE)
 find_package(QGLViewer REQUIRED)
-find_package(Eigen REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED COMPONENTS thread)
 
 include_directories(${QGLVIEWER_INCLUDE_DIR}
 		    ${catkin_INCLUDE_DIRS} 
-		    ${EIGEN_INCLUDE_DIR}
-		    ${QT_INCLUDES} )
+		    ${EIGEN3_INCLUDE_DIR}
+		    ${QT_INCLUDE_DIRS} )
 
+		  
 # SSE flags
 set(CMAKE_CXX_FLAGS
    "${CMAKE_CXX_FLAGS} -march=native -Wall -std=c++0x"
@@ -77,6 +79,11 @@ target_link_libraries(viewer ${QGLViewer_LIBRARIES}
 			     GL glut GLU
 		     )
 
+MESSAGE("QT LIBS : ${QT_LIBRARIES}")
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE)		   
 #add_executable(videoStitch src/main_stitchVideos.cpp)
 #target_link_libraries(viewer ${QGLViewer_LIBRARIES}
 #			     ${QGLVIEWER_LIBRARY}
