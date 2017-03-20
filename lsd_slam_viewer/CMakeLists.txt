@@ -68,7 +68,7 @@ set(HEADER_FILES
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/thirdparty/Sophus
-)  
+  )
 
 add_executable(viewer src/main_viewer.cpp ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(viewer ${QGLViewer_LIBRARIES}
@@ -79,7 +79,6 @@ target_link_libraries(viewer ${QGLViewer_LIBRARIES}
 			     GL glut GLU
 		     )
 
-MESSAGE("QT LIBS : ${QT_LIBRARIES}")
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
