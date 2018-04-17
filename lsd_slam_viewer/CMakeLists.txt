@@ -77,8 +77,10 @@ target_link_libraries(viewer ${QGLViewer_LIBRARIES}
 			     ${Boost_LIBRARIES}
 			     ${QT_LIBRARIES}
 			     GL glut GLU
-		     )
+			     )
+add_dependencies(viewer ${catkin_EXPORTED_TARGETS})			   
 
+		   
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
   FILES_MATCHING PATTERN "*.h"
