@@ -2,10 +2,23 @@
 
 The catkin branch of this repo works with Ubuntu 16.04 , ROS Kinetic
 
+To install :
+
+sudo apt remove libqglviewer-dev
+sudo apt install libqglviewer-dev-qt4
+cd /usr/lib/x86_64-linux-gnu
+sudo ln -s libQGLViewer-qt4.so libQGLViewer.so
+
+cd ~/catkin_ws
+cd src
+git clone https://github.com/jeremyfix/lsd_slam.git
+cd lsd_slam
+git checkout catkin
+cd ~/catkin_ws
+catkin build lsd_slam
 
 
-
-
+Then you can follow the original instructions of the authors using the rosbag and you should see the point cloud within the viewer, the pose and the keyposes as well.
 
 # LSD-SLAM: Large-Scale Direct Monocular SLAM
 
