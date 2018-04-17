@@ -48,7 +48,12 @@ generate_messages(DEPENDENCIES)
 
 generate_dynamic_reconfigure_options(
   cfg/LSDSLAMViewerParams.cfg
-)
+  )
+
+
+catkin_package(
+  DEPENDS OpenCV
+  )
 
 
 # Sources files

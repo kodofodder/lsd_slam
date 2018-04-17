@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   roscpp
   rosbag
+  lsd_slam_viewer
 )
 
 find_package(Eigen3 REQUIRED)
@@ -41,9 +42,9 @@ generate_dynamic_reconfigure_options(
 
 catkin_package(
   LIBRARIES lsdslam
-  DEPENDS Eigen SuiteSparse
+  DEPENDS #Eigen3 SuiteSparse
   CATKIN_DEPENDS libg2o 
-)
+  )
 
 # SSE flags
 add_definitions("-DUSE_ROS")
@@ -88,12 +89,12 @@ set(SOURCE_FILES
 
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIR}
   ${PROJECT_SOURCE_DIR}/src
   ${PROJECT_SOURCE_DIR}/thirdparty/Sophus
   ${CSPARSE_INCLUDE_DIR} #Has been set by SuiteParse
   ${CHOLMOD_INCLUDE_DIR} #Has been set by SuiteParse
+  ${catkin_INCLUDE_DIRS}
 )
 
 
