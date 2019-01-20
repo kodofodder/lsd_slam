@@ -1,24 +1,46 @@
 # Notes from the original code of tum-vision :
 
+## Installation ROS melodic + Ubuntu 18.04 ; compiles but crashes
+
+Install system dependencies
+
+    sudo apt install qt4-qmake
+    sudo apt-get install ros-melodic-libg2o ros-melodic-cv-bridge liblapack-dev libblas-dev freeglut3-dev libqglviewer-dev-qt4 libsuitesparse-dev libx11-dev
+
+
+    cd src
+    git clone https://github.com/jeremyfix/lsd_slam.git
+    cd lsd_slam
+    git checkout catkin
+    cd ~/catkin_ws
+    catkin build lsd_slam
+
+lsd_slam_core and lsd_slam_viewer compile. Lsd_slam_viewer can be executed. Lsd_slam_core dataset or liveslam  crashes with double free corruption.
+ 
+
+## Installation ROS indigo + Ubuntu 16.04
+
 The catkin branch of this repo works with Ubuntu 16.04 , ROS Kinetic
 
 To install :
 
-sudo apt remove libqglviewer-dev
-sudo apt install libqglviewer-dev-qt4
-cd /usr/lib/x86_64-linux-gnu
-sudo ln -s libQGLViewer-qt4.so libQGLViewer.so
+    sudo apt remove libqglviewer-dev
+    sudo apt install libqglviewer-dev-qt4
+    cd /usr/lib/x86_64-linux-gnu
+    sudo ln -s libQGLViewer-qt4.so libQGLViewer.so
 
-cd ~/catkin_ws
-cd src
-git clone https://github.com/jeremyfix/lsd_slam.git
-cd lsd_slam
-git checkout catkin
-cd ~/catkin_ws
-catkin build lsd_slam
+    cd ~/catkin_ws
+    cd src
+    git clone https://github.com/jeremyfix/lsd_slam.git
+    cd lsd_slam
+    git checkout catkin
+    cd ~/catkin_ws
+    catkin build lsd_slam
 
 
 Then you can follow the original instructions of the authors using the rosbag and you should see the point cloud within the viewer, the pose and the keyposes as well.
+
+
 
 # LSD-SLAM: Large-Scale Direct Monocular SLAM
 
