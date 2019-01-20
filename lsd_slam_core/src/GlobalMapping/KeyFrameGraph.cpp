@@ -73,8 +73,8 @@ KeyFrameGraph::KeyFrameGraph()
 	//g2o::OptimizationAlgorithmLevenberg* algorithm = new g2o::OptimizationAlgorithmLevenberg(blockSolver);
     //
     //
-    std::unique_ptr<BlockSolver::LinearSolverType> linearSolver(new LinearSolver());
-    std::unique_ptr<BlockerSolver> blockSolver(new BlockSolver(std::move(linearSolver)));
+    std::unique_ptr<BlockSolver::LinearSolverType> solver(new LinearSolver());
+    std::unique_ptr<BlockSolver> blockSolver(new BlockSolver(std::move(solver)));
     g2o::OptimizationAlgorithmLevenberg* algorithm = new g2o::OptimizationAlgorithmLevenberg(std::move(blockSolver));
 
 	graph.setAlgorithm(algorithm);
