@@ -24,7 +24,7 @@
 #include "Tracking/TrackingReference.h"
 #include "util/globalFuncs.h"
 #include "IOWrapper/ImageDisplay.h"
-#include "Tracking/LGSX.h"
+#include "Tracking/least_squares.h"
 
 #include <Eigen/Core>
 
@@ -172,7 +172,7 @@ SE3 SE3Tracker::trackFrameOnPermaref(
 
 	affineEstimation_a = 1; affineEstimation_b = 0;
 
-	LGS6 ls;
+	NormalEquationsLeastSquares ls;
 	diverged = false;
 	trackingWasGood = true;
 
@@ -304,7 +304,7 @@ SE3 SE3Tracker::trackFrame(
 
 	// ============ track frame ============
 	Sophus::SE3f referenceToFrame = frameToReference_initialEstimate.inverse().cast<float>();
-	LGS6 ls;
+	NormalEquationsLeastSquares ls;
 
 
 	int numCalcResidualCalls[PYRAMID_LEVELS];
@@ -1030,17 +1030,16 @@ float SE3Tracker::calcResidualAndBuffers(
 
 
 #if defined(ENABLE_SSE)
-void SE3Tracker::calculateWarpUpdateSSE(
-		LGS6 &ls)
+Vector6 SE3Tracker::calculateWarpUpdateSSE(
+		NormalEquationsLeastSquares &ls)
 {
 	ls.initialize(width*height);
 
 //	printf("wupd SSE\n");
 	for(int i=0;i<buf_warped_size-3;i+=4)
 	{
-
+		Vector6 v1,v2,v3,v4;
 		__m128 val1, val2, val3, val4;
-		__m128 J61, J62, J63, J64, J65, J66;
 
 		// redefine pz
 		__m128 pz = _mm_load_ps(buf_warped_z+i);
@@ -1050,14 +1049,21 @@ void SE3Tracker::calculateWarpUpdateSSE(
 		__m128 gx = _mm_load_ps(buf_warped_dx+i);
 		val1 = _mm_mul_ps(pz, gx);			// gx / z => SET [0]
 		//v[0] = z*gx;
-		J61 = val1;
+		v1[0] = SSEE(val1,0);
+		v2[0] = SSEE(val1,1);
+		v3[0] = SSEE(val1,2);
+		v4[0] = SSEE(val1,3);
+
 
 
 
 		__m128 gy = _mm_load_ps(buf_warped_dy+i);
 		val1 = _mm_mul_ps(pz, gy);					// gy / z => SET [1]
 		//v[1] = z*gy;
-		J62 = val1;
+		v1[1] = SSEE(val1,0);
+		v2[1] = SSEE(val1,1);
+		v3[1] = SSEE(val1,2);
+		v4[1] = SSEE(val1,3);
 
 
 		__m128 px = _mm_load_ps(buf_warped_x+i);
@@ -1068,7 +1074,10 @@ void SE3Tracker::calculateWarpUpdateSSE(
 		val2 = _mm_mul_ps(val2, pz);	//  py * gx * z
 		val1 = _mm_sub_ps(val1, val2);  // px * gy * z - py * gx * z => SET [5]
 		//v[5] = -py * z * gx +  px * z * gy;
-		J66 = val1;
+		v1[5] = SSEE(val1,0);
+		v2[5] = SSEE(val1,1);
+		v3[5] = SSEE(val1,2);
+		v4[5] = SSEE(val1,3);
 
 
 		// redefine pz
@@ -1084,7 +1093,10 @@ void SE3Tracker::calculateWarpUpdateSSE(
 		val3 = _mm_add_ps(val1, val2);
 		val3 = _mm_sub_ps(_mm_setr_ps(0,0,0,0),val3);	//-px * z_sqr * gx -py * z_sqr * gy
 		//v[2] = -px * z_sqr * gx -py * z_sqr * gy;	=> SET [2]
-		J63 = val3;
+		v1[2] = SSEE(val3,0);
+		v2[2] = SSEE(val3,1);
+		v3[2] = SSEE(val3,2);
+		v4[2] = SSEE(val3,3);
 
 
 		val3 = _mm_mul_ps(val1, py); // px * z_sqr * gx * py
@@ -1095,7 +1107,10 @@ void SE3Tracker::calculateWarpUpdateSSE(
 		//v[3] = -px * py * z_sqr * gx +
 		//       -py * py * z_sqr * gy +
 		//       -gy;		=> SET [3]
-		J64 = val4;
+		v1[3] = SSEE(val4,0);
+		v2[3] = SSEE(val4,1);
+		v3[3] = SSEE(val4,2);
+		v4[3] = SSEE(val4,3);
 
 
 		val3 = _mm_mul_ps(val1, px); // px * px * z_sqr * gx
@@ -1105,35 +1120,37 @@ void SE3Tracker::calculateWarpUpdateSSE(
 		//v[4] = px * px * z_sqr * gx +
 		//	   px * py * z_sqr * gy +
 		//	   gx;				=> SET [4]
-		J65 = val4;
+		v1[4] = SSEE(val4,0);
+		v2[4] = SSEE(val4,1);
+		v3[4] = SSEE(val4,2);
+		v4[4] = SSEE(val4,3);
 
-		if(i+3<buf_warped_size)
-		{
-			ls.updateSSE(J61, J62, J63, J64, J65, J66, _mm_load_ps(buf_warped_residual+i), _mm_load_ps(buf_weight_p+i));
-		}
-		else
-		{
-			for(int k=0;i+k<buf_warped_size;k++)
-			{
-				Vector6 v6;
-				v6 << SSEE(J61,k),SSEE(J62,k),SSEE(J63,k),SSEE(J64,k),SSEE(J65,k),SSEE(J66,k);
-				ls.update(v6, *(buf_warped_residual+i+k), *(buf_weight_p+i+k));
-			}
-		}
+		// step 6: integrate into A and b:
+		ls.update(v1, *(buf_warped_residual+i+0), *(buf_weight_p+i+0));
 
+		if(i+1>=buf_warped_size) break;
+		ls.update(v2, *(buf_warped_residual+i+1), *(buf_weight_p+i+1));
 
+		if(i+2>=buf_warped_size) break;
+		ls.update(v3, *(buf_warped_residual+i+2), *(buf_weight_p+i+2));
+
+		if(i+3>=buf_warped_size) break;
+		ls.update(v4, *(buf_warped_residual+i+3), *(buf_weight_p+i+3));
 	}
+	Vector6 result;
 
 	// solve ls
 	ls.finish();
+	ls.solve(result);
 
+	return result;
 }
 #endif
 
 
 #if defined(ENABLE_NEON)
-void SE3Tracker::calculateWarpUpdateNEON(
-		LGS6 &ls)
+Vector6 SE3Tracker::calculateWarpUpdateNEON(
+		NormalEquationsLeastSquares &ls)
 {
 //	weightEstimator.reset();
 //	weightEstimator.estimateDistributionNEON(buf_warped_residual, buf_warped_size);
@@ -1246,17 +1263,19 @@ void SE3Tracker::calculateWarpUpdateNEON(
 			ls.update(v4, *(buf_warped_residual+i+3), *(buf_weight_p+i+3));
 		}
 	}
+	Vector6 result;
 
 	// solve ls
 	ls.finish();
-	//ls.solve(result);
+	ls.solve(result);
 
+	return result;
 }
 #endif
 
 
-void SE3Tracker::calculateWarpUpdate(
-		LGS6 &ls)
+Vector6 SE3Tracker::calculateWarpUpdate(
+		NormalEquationsLeastSquares &ls)
 {
 //	weightEstimator.reset();
 //	weightEstimator.estimateDistribution(buf_warped_residual, buf_warped_size);
@@ -1290,12 +1309,13 @@ void SE3Tracker::calculateWarpUpdate(
 		// step 6: integrate into A and b:
 		ls.update(v, r, *(buf_weight_p+i));
 	}
+	Vector6 result;
 
 	// solve ls
 	ls.finish();
-	//result = ls.A.ldlt().solve(ls.b);
+	ls.solve(result);
 
-
+	return result;
 }
 
 

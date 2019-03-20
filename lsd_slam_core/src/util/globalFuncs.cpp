@@ -22,6 +22,7 @@
 #include "util/SophusUtil.h"
 #include "opencv2/opencv.hpp"
 #include "DataStructures/Frame.h"
+#include "opencv2/core/types_c.h"
 
 namespace lsd_slam
 {
@@ -50,10 +51,10 @@ void printMessageOnCVImage(cv::Mat &image, std::string line1,std::string line2)
 			image.at<cv::Vec3b>(y,x) *= 0.5;
 
 	cv::putText(image, line2, cvPoint(10,image.rows-5),
-	    CV_FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(200,200,250), 1, 8);
+	    cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(200,200,250), 1, 8);
 
 	cv::putText(image, line1, cvPoint(10,image.rows-18),
-	    CV_FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(200,200,250), 1, 8);
+	    cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(200,200,250), 1, 8);
 }
 
 
@@ -71,7 +72,7 @@ cv::Mat getDepthRainbowPlot(const float* idepth, const float* idepthVar, const f
 		cv::Mat keyFrameImage(height, width, CV_32F, const_cast<float*>(gray));
 		cv::Mat keyFrameImage8u;
 		keyFrameImage.convertTo(keyFrameImage8u, CV_8UC1);
-		cv::cvtColor(keyFrameImage8u, res, CV_GRAY2RGB);
+		cv::cvtColor(keyFrameImage8u, res, cv::COLOR_GRAY2RGB);
 	}
 	else
 		fillCvMat(&res,cv::Vec3b(255,170,168));
@@ -136,7 +137,7 @@ cv::Mat getVarRedGreenPlot(const float* idepthVar, const float* gray, int width,
 		cv::Mat keyFrameImage(height, width, CV_32F, const_cast<float*>(gray));
 		cv::Mat keyFrameImage8u;
 		keyFrameImage.convertTo(keyFrameImage8u, CV_8UC1);
-		cv::cvtColor(keyFrameImage8u, res, CV_GRAY2RGB);
+		cv::cvtColor(keyFrameImage8u, res, cv::COLOR_GRAY2RGB);
 	}
 	else
 		fillCvMat(&res,cv::Vec3b(255,170,168));

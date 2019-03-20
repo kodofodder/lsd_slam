@@ -23,7 +23,7 @@
 #include "util/settings.h"
 #include "util/EigenCoreInclude.h"
 #include "util/SophusUtil.h"
-#include "Tracking/LGSX.h"
+#include "Tracking/least_squares.h"
 
 
 namespace lsd_slam
@@ -163,15 +163,15 @@ private:
 
 
 
-	void calculateWarpUpdate(
-			LGS6 &ls);
+	Vector6 calculateWarpUpdate(
+			NormalEquationsLeastSquares &ls);
 #if defined(ENABLE_SSE)
-	void calculateWarpUpdateSSE(
-			LGS6 &ls);
+	Vector6 calculateWarpUpdateSSE(
+			NormalEquationsLeastSquares &ls);
 #endif
 #if defined(ENABLE_NEON)
-	void calculateWarpUpdateNEON(
-			LGS6 &ls);
+	Vector6 calculateWarpUpdateNEON(
+			NormalEquationsLeastSquares &ls);
 #endif
 
 	void calcResidualAndBuffers_debugStart();
